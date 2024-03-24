@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	saveCar string = "/cars/add-car"
-	getCar  string = "/cars/get-car"
+	saveCar string = "cars/add-car"
+	getCar  string = "cars/get-car"
 )
 
 func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
@@ -45,7 +45,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			return
 		}
 		log.Println(string(jsonCar))
-		responseTopic := fmt.Sprintf("/response%s", topic)
+		responseTopic := fmt.Sprintf("response/%s", topic)
 		log.Println(responseTopic)
 		token := client.Publish(responseTopic, 0, false, jsonCar)
 		if token.Wait() && token.Error() != nil {

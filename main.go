@@ -16,9 +16,9 @@ const (
 	broker   string = "tcp://broker.emqx.io:1883"
 	userName string = "emqx"
 	password string = "public"
-	clienID  string = "mqtt-server"
-	saveCar  string = "/cars/add-car"
-	getCar   string = "/cars/get-car"
+	clienID  string = "mqtt-test"
+	saveCar  string = "cars/add-car"
+	getCar   string = "cars/get-car"
 )
 
 func init() {
