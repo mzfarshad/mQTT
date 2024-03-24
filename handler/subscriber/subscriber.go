@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	saveCar string = "cars/add-car"
-	getCar  string = "cars/get-car"
+	saveCar    string = "cars/add-car"
+	getCarByID string = "cars/get-car"
+	allCars    string = "cars/all-cars"
 )
 
 func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
@@ -32,7 +33,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			return
 		}
 		fmt.Println("Saved car in database")
-	case strings.HasPrefix(topic, getCar):
+	case strings.HasPrefix(topic, getCarByID):
 		log.Println(topic)
 		car, err := models.FindCarByID(topic)
 		if err != nil {
@@ -41,13 +42,27 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 		}
 		jsonCar, err := json.Marshal(car)
 		if err != nil {
-			log.Printf("failed encoding to json: %s\n", err)
+			log.Printf("failed encoding to jsonCar: %s\n", err)
 			return
 		}
 		log.Println(string(jsonCar))
-		responseTopic := fmt.Sprintf("response/%s", topic)
-		log.Println(responseTopic)
-		token := client.Publish(responseTopic, 0, false, jsonCar)
+		token := client.Publish("response/car", 0, false, jsonCar)
+		if token.Wait() && token.Error() != nil {
+			log.Printf("error publishing MQTT message : %s\n", token.Error())
+			return
+		}
+	case topic == allCars:
+		cars, err := models.GetCars()
+		if err != nil {
+			log.Printf("error retrieveing cars from db: %s \n", err)
+			return
+		}
+		jsonCars, err := json.Marshal(cars)
+		if err != nil {
+			log.Printf("failed encoding to jsonCars: %s \n", err)
+			return
+		}
+		token := client.Publish("response/all-cars", 0, false, jsonCars)
 		if token.Wait() && token.Error() != nil {
 			log.Printf("error publishing MQTT message : %s\n", token.Error())
 			return

@@ -39,3 +39,10 @@ func FindCarByID(topic string) ([]Car, error) {
 	}
 	return cars, nil
 }
+func GetCars() ([]Car, error) {
+	var cars []Car
+	if err := db.Debug().Find(&cars).Error; err != nil {
+		return nil, fmt.Errorf("error retrieved from db : %s", err)
+	}
+	return cars, nil
+}

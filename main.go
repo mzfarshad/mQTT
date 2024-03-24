@@ -13,12 +13,13 @@ import (
 )
 
 const (
-	broker   string = "tcp://broker.emqx.io:1883"
-	userName string = "emqx"
-	password string = "public"
-	clienID  string = "mqtt-test"
-	saveCar  string = "cars/add-car"
-	getCar   string = "cars/get-car"
+	broker     string = "tcp://broker.emqx.io:1883"
+	userName   string = "emqx"
+	password   string = "public"
+	clienID    string = "mqtt-test"
+	saveCar    string = "cars/add-car"
+	getCarByID string = "cars/get-car"
+	allCars    string = "cars/all-cars"
 )
 
 func init() {
@@ -48,7 +49,10 @@ func main() {
 	client.Subscribe(saveCar, 0, func(client mqtt.Client, msg mqtt.Message) {
 		subscriber.CarSubscribe(client, msg)
 	})
-	client.Subscribe(getCar+"/#", 0, func(client mqtt.Client, msg mqtt.Message) {
+	client.Subscribe(getCarByID+"/#", 0, func(client mqtt.Client, msg mqtt.Message) {
+		subscriber.CarSubscribe(client, msg)
+	})
+	client.Subscribe(allCars, 0, func(client mqtt.Client, msg mqtt.Message) {
 		subscriber.CarSubscribe(client, msg)
 	})
 
