@@ -32,7 +32,14 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			log.Printf("failed to save car in database: %s\n", err)
 			return
 		}
+		message := "Successfully saved car"
+		token := client.Publish("response/save-car", 0, false, message)
+		if token.Wait() && token.Error() != nil {
+			log.Printf("error publishing MQTT message : %s\n", token.Error())
+			return
+		}
 		fmt.Println("Saved car in database")
+
 	case strings.HasPrefix(topic, getCarByID):
 		log.Println(topic)
 		car, err := models.FindCarByID(topic)
@@ -51,6 +58,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			log.Printf("error publishing MQTT message : %s\n", token.Error())
 			return
 		}
+
 	case topic == allCars:
 		log.Println(topic)
 		cars, err := models.GetCars()
