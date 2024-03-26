@@ -52,6 +52,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			return
 		}
 	case topic == allCars:
+		log.Println(topic)
 		cars, err := models.GetCars()
 		if err != nil {
 			log.Printf("error retrieveing cars from db: %s \n", err)

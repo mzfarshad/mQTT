@@ -13,9 +13,7 @@ import (
 )
 
 const (
-	broker     string = "tcp://broker.emqx.io:1883"
-	userName   string = "emqx"
-	password   string = "public"
+	broker     string = "tcp://localhost:1883"
 	clienID    string = "mqtt-test"
 	saveCar    string = "cars/add-car"
 	getCarByID string = "cars/get-car"
@@ -37,8 +35,8 @@ func main() {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetUsername(userName)
-	opts.SetPassword(password)
+	opts.SetUsername(os.Getenv("USER_NAME"))
+	opts.SetPassword(os.Getenv("PASSWORD"))
 	opts.SetClientID(clienID)
 
 	client := mqtt.NewClient(opts)
