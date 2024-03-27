@@ -31,7 +31,7 @@ func FindCarByID(topic string) ([]Car, error) {
 	getID := strings.Split(topic, "/")
 	id, err := strconv.Atoi(getID[len(getID)-1])
 	if err != nil {
-		return nil, fmt.Errorf("invalid ID in topic: %s", err)
+		return nil, fmt.Errorf("failed get id from topic : %s", err)
 	}
 	var cars []Car
 	if err := db.Where("id=?", id).Find(&cars).Error; err != nil {
