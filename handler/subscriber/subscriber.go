@@ -47,6 +47,14 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			log.Printf("error retrieveing car from database: %s\n", err)
 			return
 		}
+		if car == nil {
+			response := fmt.Sprintf("invalid id : %s", err)
+			token := client.Publish("response/car", 0, false, response)
+			if token.Wait() && token.Error() != nil {
+				log.Printf("error publishing MQTT message : %s\n", token.Error())
+			}
+			return
+		}
 		jsonCar, err := json.Marshal(car)
 		if err != nil {
 			log.Printf("failed encoding to jsonCar: %s\n", err)
