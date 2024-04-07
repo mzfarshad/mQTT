@@ -36,7 +36,6 @@ func main() {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
 	opts.SetUsername(os.Getenv("USER_NAME"))
-	opts.SetPassword(os.Getenv("PASSWORD"))
 	opts.SetClientID(clienID)
 
 	client := mqtt.NewClient(opts)
