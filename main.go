@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	broker     string = "tcp://localhost:1883"
+	broker     string = "tcp://localhost:1885"
 	clienID    string = "mqtt-test"
 	saveCar    string = "cars/add-car"
 	getCarByID string = "cars/get-car"
@@ -35,7 +35,6 @@ func main() {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetUsername(os.Getenv("USER_NAME"))
 	opts.SetClientID(clienID)
 
 	client := mqtt.NewClient(opts)

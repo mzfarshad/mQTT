@@ -1,0 +1,40 @@
+version: '3.7'
+services:
+  servers:
+    container_name: mqtt-dev
+    image: mqtt-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENV_FILE: /home/hustller/go/src/github.com/mzfarshad/Mqtt-test/.env
+        DB_HOST: ${DB_HOST}
+        DB_USER: ${DB_USER}
+        DB_PASS: ${DB_PASS}
+        DB_NAME: ${DB_NAME}
+        DB_PORT: ${DB_PORT}
+        DB_TIMEZONE: ${DB_TIMEZONE}
+
+    env_file:
+      - .env
+
+    depends_on:
+      - db
+
+  db:
+    container_name: postgres
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+   
+    volumes:
+      - data:/data/postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+
+
+volumes:
+  data:
+    driver: local
