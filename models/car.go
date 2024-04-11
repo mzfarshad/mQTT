@@ -3,8 +3,6 @@ package models
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"gorm.io/gorm"
 )
@@ -27,18 +25,15 @@ func (c *Car) Create() error {
 	}
 	return nil
 }
-func FindCarByID(topic string) ([]Car, error) {
-	getID := strings.Split(topic, "/")
-	id, err := strconv.Atoi(getID[len(getID)-1])
-	if err != nil {
-		return nil, fmt.Errorf("failed get id from topic : %s", err)
-	}
+
+func FindCarByID(id int) ([]Car, error) {
 	var cars []Car
 	if err := db.Where("id=?", id).Find(&cars).Error; err != nil {
 		return nil, fmt.Errorf("not found car: %s", err)
 	}
 	return cars, nil
 }
+
 func GetCars() ([]Car, error) {
 	var cars []Car
 	if err := db.Debug().Find(&cars).Error; err != nil {

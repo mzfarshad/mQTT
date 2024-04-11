@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -25,45 +26,62 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 		car := new(models.Car)
 		err := json.Unmarshal(msg.Payload(), &car)
 		if err != nil {
-			log.Printf("failed decoding JSON: %s\n", err)
+			log.Printf("failed decoding JSON: %v", err)
 			return
 		}
 		if err := car.Create(); err != nil {
-			log.Printf("failed to save car in database: %s\n", err)
+			log.Printf("failed to save car in database: %v", err)
 			return
 		}
 		message := "Successfully saved car"
 		token := client.Publish("response/save-car", 0, false, message)
 		if token.Wait() && token.Error() != nil {
-			log.Printf("error publishing MQTT message : %s\n", token.Error())
+			log.Printf("error publishing MQTT message : %v", token.Error())
 			return
 		}
 		fmt.Println("Saved car in database")
 
 	case strings.HasPrefix(topic, getCarByID):
 		log.Println(topic)
-		car, err := models.FindCarByID(topic)
+		getID := strings.Split(topic, "/")
+		id, err := strconv.Atoi(getID[len(getID)-1])
 		if err != nil {
-			log.Printf("error retrieveing car from database: %s\n", err)
-			return
-		}
-		if car == nil {
-			response := fmt.Sprintf("invalid id : %s", err)
+			log.Printf("failed get id from topic : %v", err)
+			response := "failed get id from topic"
 			token := client.Publish("response/car", 0, false, response)
 			if token.Wait() && token.Error() != nil {
-				log.Printf("error publishing MQTT message : %s\n", token.Error())
+				log.Printf("error publishing MQTT message : %v", token.Error())
+			}
+			return
+		}
+		car, err := models.FindCarByID(id)
+		if err != nil {
+			log.Printf("error retrieveing car from database: %v", err)
+			response := fmt.Sprintf("not found car by id : %d please try again...", id)
+			token := client.Publish("response/car", 0, false, response)
+			if token.Wait() && token.Error() != nil {
+				log.Printf("error publishing MQTT message : %v", token.Error())
+			}
+			return
+		}
+		if len(car) < 1 {
+			response := fmt.Sprintf("id:%d is not exist", id)
+			log.Print(response)
+			token := client.Publish("response/car", 0, false, response)
+			if token.Wait() && token.Error() != nil {
+				log.Printf("error publishing MQTT message : %v", token.Error())
 			}
 			return
 		}
 		jsonCar, err := json.Marshal(car)
 		if err != nil {
-			log.Printf("failed encoding to jsonCar: %s\n", err)
+			log.Printf("failed encoding to jsonCar: %v", err)
 			return
 		}
 		log.Println(string(jsonCar))
 		token := client.Publish("response/car", 0, false, jsonCar)
 		if token.Wait() && token.Error() != nil {
-			log.Printf("error publishing MQTT message : %s\n", token.Error())
+			log.Printf("error publishing MQTT message : %v", token.Error())
 			return
 		}
 
@@ -71,17 +89,17 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 		log.Println(topic)
 		cars, err := models.GetCars()
 		if err != nil {
-			log.Printf("error retrieveing cars from db: %s \n", err)
+			log.Printf("error retrieveing cars from db: %v", err)
 			return
 		}
 		jsonCars, err := json.Marshal(cars)
 		if err != nil {
-			log.Printf("failed encoding to jsonCars: %s \n", err)
+			log.Printf("failed encoding to jsonCars: %v", err)
 			return
 		}
 		token := client.Publish("response/all-cars", 0, false, jsonCars)
 		if token.Wait() && token.Error() != nil {
-			log.Printf("error publishing MQTT message : %s\n", token.Error())
+			log.Printf("error publishing MQTT message : %v", token.Error())
 			return
 		}
 	}
