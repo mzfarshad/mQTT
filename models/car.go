@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -14,11 +15,11 @@ type Car struct {
 	Color   string `json:"color"`
 }
 
-func (c *Car) Create() error {
+func (c *Car) Create(ctx context.Context) error {
 	if c == nil {
 		return errors.New("trying to create car model")
 	}
-	err := db.Debug().Save(&c).Error
+	err := db.Debug().WithContext(ctx).Save(&c).Error
 
 	if err != nil {
 		return err

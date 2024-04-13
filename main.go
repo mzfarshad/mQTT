@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/joho/godotenv"
-	"github.com/mzfarshad/MQTT-test/config"
-	"github.com/mzfarshad/MQTT-test/handler/subscriber"
+	"github.com/mzfarshad/MQTT-test/broker"
 	"github.com/mzfarshad/MQTT-test/models"
 )
 
@@ -18,43 +18,60 @@ func init() {
 		log.Fatalf("failed to load .env file: %s", err)
 	}
 }
+
 func main() {
 	if err := models.ConnectPostgres(); err != nil {
 		// panic("failed to connect database")
 		log.Println("failed to connect database")
+	} else {
+		log.Println("successfully connected to database...")
 	}
-	log.Println("successfully connected to database...")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
-	opts := mqtt.NewClientOptions()
-	mqttConfig := config.Get().Mqtt()
-	opts.AddBroker(mqttConfig.BrokerAddress)
-	opts.SetClientID(mqttConfig.ClientId)
-
-	client := mqtt.NewClient(opts)
-	disconnect := func(client mqtt.Client) {
-		client.Disconnect(500)
-		fmt.Println("mqtt broker disconnected")
+	brokerClient, err := broker.NewClient()
+	if err != nil {
+		log.Fatal(err)
 	}
-	defer disconnect(client)
+	defer brokerClient.Disconnect(2 * time.Second)
 
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+	err = brokerClient.Subscribe(broker.TopicRegisterCar, new(saveCar).WithBroker(brokerClient).Consume)
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	client.Subscribe(subscriber.MqttTopicSaveCar.String(), 0, func(client mqtt.Client, msg mqtt.Message) {
-		subscriber.CarSubscribe(client, msg)
-	})
-	client.Subscribe(subscriber.MqttToicGetCarByID.String()+"/#", 0, func(client mqtt.Client, msg mqtt.Message) {
-		subscriber.CarSubscribe(client, msg)
-	})
-	client.Subscribe(subscriber.MqttTopicAllCars.String(), 0, func(client mqtt.Client, msg mqtt.Message) {
-		subscriber.CarSubscribe(client, msg)
-	})
-	// log.Println("Hello World!")
 
 	<-c
+}
 
+// SaveCar is a consumer to save cars added to broker.TopicRegisterCar topic.
+type saveCar struct {
+	broker broker.Client
+}
+
+func (s *saveCar) WithBroker(c broker.Client) *saveCar {
+	if s == nil {
+		return new(saveCar).WithBroker(c)
+	}
+	s.broker = c
+	return s
+}
+
+func (s *saveCar) Consume(msg []byte) {
+	log.Printf(">>> consuming new message on %q...", broker.TopicRegisterCar.String())
+	car := new(models.Car)
+	err := json.Unmarshal(msg, &car)
+	if err != nil {
+		log.Printf("failed decoding JSON: %v", err)
+		return
+	}
+	if err := car.Create(context.Background()); err != nil {
+		log.Printf("failed to save car in database: %v", err)
+		return
+	}
+	carMsg, _ := json.Marshal(car)
+	err = s.broker.Publish(broker.TopicGetCars, carMsg)
+	if err != nil {
+		return
+	}
 }
