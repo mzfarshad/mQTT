@@ -1,22 +1,18 @@
-# MQTT IN GOLANG
+# Mqtt In Golang
 
-## GOAL
 
-#####   Using the MQTT protocol, a JSON file which is an example of a car and has name, company and color fields is stored in the Postgres database, and it can find a car with a specific ID or a list of all available cars using the topics below. Get the database
+This is a demo project which uses mqtt broker for communicating between clients and a Golang server. Clients can publish on the topic of **"cars/register"** using the Mosquitto CLI as following:
 
-### Save Car
+```bash
 
-#####   publish :  *cars/add-car*  
-#####   subscribe : *response/save-car*
+  mosquitto_pub -t "cars/register" -m '{"name":"X7","company":"BMW","color":"red"}' -p 1885
 
-### Receive Cars
+```
 
-#####   You can use two methods to receive data:
+The **Save Car Consumer** is subscribed and listening to the above topic, and is ready to save the received car message into the database. In case of success, this consumer publishes a new message which can be tracked by subscribing into the topic of **"cars"** as following:
 
-1. #### Receive car by ID
-  #####  publish : *cars/get-car/< car_id >*
-  #####  subscribe : *response/car*
+```bash
 
-2. #### Receive all Cars
-  #####   publish : *cars/all-cars*
-  #####   subscribe : *response/all-cars*
+  mosquitto_sub -t "cars" -p 1885
+
+```
