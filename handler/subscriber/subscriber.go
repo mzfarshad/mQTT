@@ -11,17 +11,23 @@ import (
 	"github.com/mzfarshad/MQTT-test/models"
 )
 
+type MqttTopic string
+
+func (m MqttTopic) String() string {
+	return string(m)
+}
+
 const (
-	saveCar    string = "cars/add-car"
-	getCarByID string = "cars/get-car"
-	allCars    string = "cars/all-cars"
+	MqttTopicSaveCar   MqttTopic = "cars/add-car"
+	MqttToicGetCarByID MqttTopic = "cars/get-car"
+	MqttTopicAllCars   MqttTopic = "cars/all-cars"
 )
 
 func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 	topic := msg.Topic()
 
 	switch {
-	case topic == saveCar:
+	case topic == MqttTopicSaveCar.String():
 		log.Println(topic)
 		car := new(models.Car)
 		err := json.Unmarshal(msg.Payload(), &car)
@@ -41,7 +47,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 		}
 		fmt.Println("Saved car in database")
 
-	case strings.HasPrefix(topic, getCarByID):
+	case strings.HasPrefix(topic, MqttToicGetCarByID.String()):
 		log.Println(topic)
 		getID := strings.Split(topic, "/")
 		id, err := strconv.Atoi(getID[len(getID)-1])
@@ -51,6 +57,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			token := client.Publish("response/car", 0, false, response)
 			if token.Wait() && token.Error() != nil {
 				log.Printf("error publishing MQTT message : %v", token.Error())
+				return
 			}
 			return
 		}
@@ -61,6 +68,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			token := client.Publish("response/car", 0, false, response)
 			if token.Wait() && token.Error() != nil {
 				log.Printf("error publishing MQTT message : %v", token.Error())
+				return
 			}
 			return
 		}
@@ -70,6 +78,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			token := client.Publish("response/car", 0, false, response)
 			if token.Wait() && token.Error() != nil {
 				log.Printf("error publishing MQTT message : %v", token.Error())
+				return
 			}
 			return
 		}
@@ -85,7 +94,7 @@ func CarSubscribe(client mqtt.Client, msg mqtt.Message) {
 			return
 		}
 
-	case topic == allCars:
+	case topic == MqttTopicAllCars.String():
 		log.Println(topic)
 		cars, err := models.GetCars()
 		if err != nil {

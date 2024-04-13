@@ -1,37 +1,31 @@
-# Use official golang image as the base image
-FROM golang:1.22
+FROM golang:1.22-alpine3.19 AS builder
 
-# Set the working directory inside the container
-WORKDIR /mqtt
+COPY ${PWD} /app
+WORKDIR /app
 
-# Copy go.mod and go.sum to download dependencies
-COPY go.mod go.sum ./
+# Toggle CGO based on your app requirement. CGO_ENABLED=1 for enabling CGO
+RUN CGO_ENABLED=0 go build -ldflags '-s -w -extldflags "-static"' -o /app/appbin *.go
+# Use below if using vendor
+# RUN CGO_ENABLED=0 go build -mod=vendor -ldflags '-s -w -extldflags "-static"' -o /app/appbin *.go
 
-# Download Go dependencies
-RUN go mod download
+FROM alpine:3.19
+LABEL MAINTAINER Author <author@example.com>
 
-# Copy the entire project to the working directory
-COPY . .
+# Following commands are for installing CA certs (for proper functioning of HTTPS and other TLS)
+RUN apk --update add ca-certificates && \
+    rm -rf /var/cache/apk/*
 
-# Build the Go application
-RUN go build -o main .
+# Add new user 'appuser'
+RUN adduser -D appuser
+USER appuser
 
-# Set up environment variables from build arguments
-ARG DB_HOST
-ARG DB_USER
-ARG DB_PASS
-ARG DB_NAME
-ARG DB_PORT
-ARG DB_TIMEZONE
+COPY --from=builder /app /home/appuser/app
 
-ENV DB_HOST=$DB_HOST
-ENV DB_USER=$DB_USER
-ENV DB_PASS=$DB_PASS
-ENV DB_NAME=$DB_NAME
-ENV DB_PORT=$DB_PORT
-ENV DB_TIMEZONE=$DB_TIMEZONE
+WORKDIR /home/appuser/app
 
-# Expose the port your application runs on
+# Since running as a non-root user, port bindings < 1024 is not possible
+# 8000 for HTTP; 8443 for HTTPS;
+EXPOSE 8000
+EXPOSE 8443
 
-# Command to run the executable
-CMD ["./main"]
+CMD ["./appbin"]

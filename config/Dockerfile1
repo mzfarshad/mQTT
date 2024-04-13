@@ -1,0 +1,43 @@
+# Use official golang image as the base image for the builder stage
+FROM golang:1.22 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go.mod and go.sum to download dependencies
+COPY go.mod go.sum ./
+
+# Download Go dependencies
+RUN go mod download
+
+# Copy the entire project to the working directory
+COPY . .
+
+# Build the Go application
+RUN go build -o main .
+
+# Use Alpine Linux as the base image for the final image
+FROM alpine:3.15.3
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/main /app/
+
+# Copy the .env file into the container
+COPY .env /app/.env
+
+# Ensure that the binary file has executable permissions
+RUN chmod +x /app/main
+
+# Read environment variables from .env file
+RUN set -o allexport; cat "/app/.env" | while read line; do export "$line"; done; set +o allexport
+
+# Print contents of .env file (for debugging purposes)
+RUN echo "Contents of .env file:"
+RUN cat "/app/.env"
+
+
+# Command to run the executable
+CMD ["./main"]
