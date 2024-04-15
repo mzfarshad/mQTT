@@ -24,7 +24,7 @@ func NewClient() (Client, error) {
 
 	client := goMqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, fmt.Errorf("failed make client: %v", token.Error())
+		return nil, fmt.Errorf("failed make mqtt client: %v", token.Error())
 	}
 	return &mqtt{
 		client: client,

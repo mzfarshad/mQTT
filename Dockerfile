@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 go build -ldflags '-s -w -extldflags "-static"' -o /app/appbin
 # RUN CGO_ENABLED=0 go build -mod=vendor -ldflags '-s -w -extldflags "-static"' -o /app/appbin *.go
 
 FROM alpine:3.19
-LABEL MAINTAINER Author <author@example.com>
+LABEL MAINTAINER Author <farshad.akbari.arzati@gmail.com>
 
 # Following commands are for installing CA certs (for proper functioning of HTTPS and other TLS)
 RUN apk --update add ca-certificates && \

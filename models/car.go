@@ -27,18 +27,6 @@ func (c *Car) Create(ctx context.Context) error {
 	return nil
 }
 
-func FindCarByID(id int) ([]Car, error) {
-	var cars []Car
-	if err := db.Where("id=?", id).Find(&cars).Error; err != nil {
-		return nil, fmt.Errorf("not found car: %s", err)
-	}
-	return cars, nil
-}
-
-func GetCars() ([]Car, error) {
-	var cars []Car
-	if err := db.Debug().Find(&cars).Error; err != nil {
-		return nil, fmt.Errorf("error retrieved from db : %s", err)
-	}
-	return cars, nil
+func (c Car) String() string {
+	return fmt.Sprintf("Response save car :\n\tid: %d\n\tname: %s\n\tcompany: %s\n\tcolor: %s", c.ID, c.Name, c.Company, c.Color)
 }

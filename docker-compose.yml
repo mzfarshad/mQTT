@@ -13,31 +13,49 @@ services:
       - .:/app
     depends_on:
       - db
+      - mosquitto  
+    restart: on-failure:10
     networks:
       - mqtt-dev-connection
 
-  # db:
-  #   container_name: mqtt-db
-  #   image: postgres:14
-  #   environment:
-  #     - POSTGRES_USER=${DB_USER}
-  #     - POSTGRES_PASSWORD=${DB_PASS} 
-  #     - POSTGRES_DB=${DB_NAME}
-  #     - TZ=${DB_TIMEZONE}   
-  #   ports:
-  #     - "${DB_PORT}:5432"
-  #   expose:
-  #     - 5432
-  #   restart: unless-stopped
-  #   volumes:
-  #     - data:/data/postgres
-  #   networks:
-  #     - mqtt-dev-connection
+  db:
+    container_name: mqtt-db
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS} 
+      - POSTGRES_DB=${DB_NAME}
+      - TZ=${DB_TIMEZONE}   
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"    
+    expose:
+      - 5432
+    restart: always
+    volumes:
+      - data:/data/postgres
+    networks:
+      - mqtt-dev-connection
+
+  mosquitto:
+    container_name: mqtt-mosquitto
+    image : eclipse-mosquitto:2.0.18
+    ports:
+      - 1886:1886
+    expose:
+      - 1886
+    restart: always
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - mqtt-dev-connection
 
 volumes:
+  mosquitto-log:
+    driver: local
   data:
     driver: local
 
 networks:
   mqtt-dev-connection:
     driver: bridge
+  

@@ -21,11 +21,9 @@ func init() {
 
 func main() {
 	if err := models.ConnectPostgres(); err != nil {
-		// panic("failed to connect database")
-		log.Println("failed to connect database")
-	} else {
-		log.Println("successfully connected to database...")
+		panic("failed to connect database")
 	}
+	log.Println("successfully connected to database...")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -37,6 +35,7 @@ func main() {
 	defer brokerClient.Disconnect(2 * time.Second)
 
 	err = brokerClient.Subscribe(broker.TopicRegisterCar, new(saveCar).WithBroker(brokerClient).Consume)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,6 +68,7 @@ func (s *saveCar) Consume(msg []byte) {
 		log.Printf("failed to save car in database: %v", err)
 		return
 	}
+	log.Print(car)
 	carMsg, _ := json.Marshal(car)
 	err = s.broker.Publish(broker.TopicGetCars, carMsg)
 	if err != nil {
