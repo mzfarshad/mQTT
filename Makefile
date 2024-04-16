@@ -11,3 +11,9 @@ down:
 up:
 	make down
 	docker-compose up	
+
+.PHONY:up
+upd:
+	make down
+	docker-compose up -d
+
