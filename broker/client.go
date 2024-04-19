@@ -21,6 +21,8 @@ func NewClient() (Client, error) {
 	mqttConfig := config.Get().Mqtt()
 	opts.AddBroker(mqttConfig.BrokerAddress)
 	opts.SetClientID(mqttConfig.ClientId)
+	opts.SetUsername(mqttConfig.UserName)
+	opts.SetPassword(mqttConfig.Password)
 
 	client := goMqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {

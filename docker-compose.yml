@@ -46,6 +46,7 @@ services:
     restart: always
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/mosquitto/config/passwd
     networks:
       - mqtt-dev-connection
 
